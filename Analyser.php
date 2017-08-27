@@ -18,8 +18,8 @@ $ops =
                 '_id' => '$MarketName', 'Summaries' => array( '$last' => '$Summaries')
             )
         ),
-            array('$sort' => array('Summaries.Volume' => -1))
-        ,
+        array('$match' => array('_id' =>array('$regex' => 'BTC-'))),
+        array('$sort' => array('Summaries.OpenBuyOrders' => -1)),
         array('$limit' => 15)
     );
 $result = $collection->aggregate($ops);

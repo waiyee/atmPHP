@@ -10,7 +10,7 @@
 	$i = 1;
 	foreach ($MarkSum as $doc) {
 		$MarketName = $doc->MarketName; // Each market @ API
-		echo 'Start[.'.$i.']--'.$MarketName.' '.date('Y-m-d H:i:s').'<br/>';
+		//echo 'Start[.'.$i.']--'.$MarketName.' '.date('Y-m-d H:i:s').'<br/>';
 		
 		$market = $collection->findone(['MarketName'=>$MarketName]); //use API market name to get a id
 		
@@ -43,7 +43,7 @@
 		//$MarkGrp = array('Summaries'=>$MarkSum, 'Histories'=>$MarkHist, 'OrderBookBuy'=>array_slice($MarkOB->buy,0,100), 'OrderBookSell'=>array_slice($MarkOB->sell,0,100));
 			
 			//$result = $c2->insertMany($MarkGrp);
-			echo 'End[.'.$i++.']-- '.date('Y-m-d H:i:s').'<br/><br/>';
+			//echo 'End[.'.$i++.']-- '.date('Y-m-d H:i:s').'<br/><br/>';
 		}
 		else
 		{
