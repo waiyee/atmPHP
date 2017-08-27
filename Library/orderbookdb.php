@@ -9,7 +9,7 @@
  * @param DB Client
  * @return boolean
  */
-function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $db)
+function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db, &$sell_rate)
 {
     $exploeMrt = explode('-', $market);
 
@@ -35,6 +35,7 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $db)
             'Rate'     => $buy_rate,
             'Fee'      => $buy_fee,
             'Total'    => $buy_total,
+            'Status'   => $api_status,
             'OrderTime' => new \MongoDB\BSON\UTCDateTime(),
             'CompleteTime' => null
         ),
@@ -44,6 +45,7 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $db)
             'Rate'     => $sell_rate,
             'Fee'      => $sell_fee,
             'Total'    => $sell_total,
+            'Status'    => null,
             'OrderTime' => null,
             'CompleteTime' => null
         ),
@@ -62,11 +64,11 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $db)
  * @param $db DB Client
  * @return mixed
  */
-function boughtOrder($id, $db)
+function boughtOrder($id, $api_status, $db)
 {
     $OB = $db->coins->OwnOderBook;
 
-    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'bought', 'update_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTIme'=>  new \MongoDB\BSON\UTCDateTime())));
+    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'bought', 'update_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTIme'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
     return $result->getModifiedCount();
 }
 
@@ -76,11 +78,11 @@ function boughtOrder($id, $db)
  * @param $db DB Client
  * @return mixed
  */
-function SoldOrder($id, $db)
+function SoldOrder($id, $api_status, $db)
 {
     $OB = $db->coins->OwnOderBook;
 
-    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'update_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTIme'=>  new \MongoDB\BSON\UTCDateTime())));
+    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'update_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTIme'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
     return $result->getModifiedCount();
 }
 
@@ -92,12 +94,12 @@ function SoldOrder($id, $db)
  * @param DB Client
  * @return string
  */
-function sellLimitDB ($_id, $uuid, $db)
+function sellLimitDB ($_id, $uuid,$api_status, $db)
 {
     $OB = $db->coins->OwnOderBook;
 
 
-    $result = $OB->UpdateOne(array('_id'=>$_id), array('$set'=>array('SellOrder.uuid'=>$uuid,'SellOrder.OrderTime'=>new \MongoDB\BSON\UTCDateTime(),
+    $result = $OB->UpdateOne(array('_id'=>$_id), array('$set'=>array('SellOrder.uuid'=>$uuid,'SellOrder.OrderTime'=>new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status,
         'status'=>'selling', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
         )));
     return $result->getModifiedCount();
