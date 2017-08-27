@@ -1,6 +1,7 @@
 <?php
     include('app.php');
 
+    $days = 20;
     //echo "test";
     $today = date('Y-m-d');
     echo 'Today: '.$today;
@@ -27,7 +28,7 @@
             $dif = $diff->format("%a");
             //echo $dif.'<br>';
 
-            if((int)$dif<31) {
+            if((int)$dif<$days+1) {
                 //echo $dif;
                 $O[] = $Ticks->O;
                 $H[] = $Ticks->H;
@@ -51,72 +52,72 @@
 
         echo 'Three Line Strike: ';
         $cdl3linestrike = trader_cdl3linestrike($O,$H,$L,$C);
-        echo $cdl3linestrike[30];
+        echo $cdl3linestrike[$days];
         echo '<br>';
 
         echo 'Three Outside Up/Down: ';
         $cdl3outside = trader_cdl3outside($O,$H,$L,$C);
-        echo $cdl3outside[30];
+        echo $cdl3outside[$days];
         echo '<br>';
 
         echo 'Thrusting: ';
         $cdlthrusting = trader_cdlthrusting($O,$H,$L,$C);
-        echo $cdlthrusting[30];
+        echo $cdlthrusting[$days];
         echo '<br>';
 
         echo 'Tristar: ';
         $cdltristar = trader_cdltristar($O,$H,$L,$C);
-        echo $cdltristar[30];
+        echo $cdltristar[$days];
         echo '<br>';
 
         echo 'Abandoned Baby: ';
         $cdlabandonedbaby = trader_cdlabandonedbaby($O,$H,$L,$C);
-        echo $cdlabandonedbaby[30];
+        echo $cdlabandonedbaby[$days];
         echo '<br>';
 
         echo 'Belt-hold: ';
         $cdlbelthold = trader_cdlbelthold($O,$H,$L,$C);
-        echo $cdlbelthold[30];
+        echo $cdlbelthold[$days];
         echo '<br>';
 
         echo 'Breakaway: ';
         $cdlbreakaway = trader_cdlbreakaway($O,$H,$L,$C);
-        echo $cdlbreakaway[30];
+        echo $cdlbreakaway[$days];
         echo '<br>';
 
         echo 'Doji Star: ';
         $cdldojistar = trader_cdldojistar($O,$H,$L,$C);
-        echo $cdldojistar[30];
+        echo $cdldojistar[$days];
         echo '<br>';
 
         echo 'Dragonfly Doji: ';
         $cdldragonflydoji = trader_cdldragonflydoji($O,$H,$L,$C);
-        echo $cdldragonflydoji[30];
+        echo $cdldragonflydoji[$days];
         echo '<br>';
 
         echo 'Engulfing Pattern: ';
         $cdlengulfing = trader_cdlengulfing($O,$H,$L,$C);
-        echo $cdlengulfing[30];
+        echo $cdlengulfing[$days];
         echo '<br>';
 
         echo 'Gravestone Doji: ';
         $cdlgravestonedoji = trader_cdlgravestonedoji($O,$H,$L,$C);
-        echo $cdlgravestonedoji[30];
+        echo $cdlgravestonedoji[$days];
         echo '<br>';
 
         echo 'Hammer: ';
         $cdlhammer = trader_cdlhammer($O,$H,$L,$C);
-        echo $cdlhammer[30];
+        echo $cdlhammer[$days];
         echo '<br>';
 
         echo 'Inverted Hammer: ';
         $cdlinvertedhammer = trader_cdlinvertedhammer($O,$H,$L,$C);
-        echo $cdlinvertedhammer[30];
+        echo $cdlinvertedhammer[$days];
         echo '<br>';
 
         echo 'Ladder Bottom: ';
         $cdlladderbottom = trader_cdlladderbottom($O,$H,$L,$C);
-        echo $cdlladderbottom[30];
+        echo $cdlladderbottom[$days];
         echo '<br>';
 
 
