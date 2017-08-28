@@ -66,9 +66,9 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db, &$s
  */
 function boughtOrder($id, $api_status, $db)
 {
-    $OB = $db->coins->OwnOderBook;
+    $OB = $db->coins->OwnOrderBook;
+    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'bought', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
 
-    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'bought', 'update_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTIme'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
     return $result->getModifiedCount();
 }
 
@@ -80,9 +80,9 @@ function boughtOrder($id, $api_status, $db)
  */
 function SoldOrder($id, $api_status, $db)
 {
-    $OB = $db->coins->OwnOderBook;
+    $OB = $db->coins->OwnOrderBook;
 
-    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'update_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTIme'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
+    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
     return $result->getModifiedCount();
 }
 
@@ -94,14 +94,14 @@ function SoldOrder($id, $api_status, $db)
  * @param DB Client
  * @return string
  */
-function sellLimitDB ($_id, $uuid,$api_status, $db)
+function sellLimitDB ($_id, $uuid, $api_status, $db)
 {
-    $OB = $db->coins->OwnOderBook;
-
+    $OB = $db->coins->OwnOrderBook;
 
     $result = $OB->UpdateOne(array('_id'=>$_id), array('$set'=>array('SellOrder.uuid'=>$uuid,'SellOrder.OrderTime'=>new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status,
-        'status'=>'selling', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
+        'Status'=>'selling', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
         )));
+
     return $result->getModifiedCount();
     //return $this->call ('market/buylimit', $params, true);
 }
