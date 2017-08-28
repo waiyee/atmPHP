@@ -1,7 +1,8 @@
 <?php
 include('app.php');
+include('TrendChecker.php');
 /** GET MarketSummaries**/
-//require_once('getMarketSummaries.php');
+require_once('getMarketSummaries.php');
 //GetHighestVolumeMarkets($dbclient);
 
 
@@ -18,20 +19,22 @@ $ops =
                 '_id' => '$MarketName', 'Summaries' => array( '$last' => '$Summaries')
             )
         ),
-        array('$match' => array('_id' =>array('$regex' => 'BTC-'))),
+        array('$match' => array('_id' =>array('$regex' => 'BTC-'),
+            'Summaries.BaseVolume' => array('$gt' => 600))),
         array('$sort' => array('Summaries.OpenBuyOrders' => -1)),
         array('$limit' => 15)
     );
 $result = $collection->aggregate($ops);
+$Markets = array();
     foreach ($result as $item) {
         //var_dump($item);
         //print_r($item);
-        echo $item->_id;
-        echo '<br>';
-
+        $Markets[] = $item->_id;
+        //echo $item->_id;
+        //echo '<br>';
         //TODO: CHECK TRENDS
     }
-
+checkCandle($dbclient,$Markets);
 
 //}
 
