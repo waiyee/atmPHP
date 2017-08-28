@@ -5,7 +5,7 @@ use atm\devbittrex\DevClient;
 $devbittrex = new DevClient();
 // Use algo to select market + quntity + rate
 $market = 'BTC-LTC';
-$quantity = 0.0000131;
+$quantity = 0.0011111;
 $buy_rate = 0.47;
 
 // Suppose Call API to get uuid + api status
