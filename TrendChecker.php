@@ -1,13 +1,14 @@
 <?php
-//include('app.php');
+include('app.php');
 
-function checkCandle($dbclient, $Markets)
+function checkCandle($dbclient, $Markets,$bittrex)
 {
 //$Market = 'BTC-NEO';
     //$Markets = array('BTC-NEO', 'BTC-ETH', 'BTC-BCC', 'BTC-LSK', 'BTC-XMR', 'BTC-OMG');
     $interval = 14;
     $sum = 0;
-    $collection = $dbclient->coins->MarketTicks_30min;
+    //$collection = $dbclient->coins->MarketTicks_30min;
+    $collection = $dbclient->coins->MarketDayTicks;
 
     foreach ($Markets as $Market) {
         $ops =
@@ -158,8 +159,13 @@ function checkCandle($dbclient, $Markets)
         echo $Market;
         echo ': ';
         echo $sum;
+        echo ' Price: ';
+        $gettick = $bittrex->getTicker($Market);
+        $json = json_decode(json_encode($gettick),true);
+        echo $json['Last'];
+        echo ' Time: ';
+        echo date("Y-m-d H:i:s");
         echo '<br>';
-
     }
 }
 ?>
