@@ -156,16 +156,21 @@ function checkCandle($dbclient, $Markets,$bittrex)
         $cdlxsidegap3methods = trader_cdlxsidegap3methods($O, $H, $L, $C);
         $sum += $cdlxsidegap3methods[$interval];
 
-        echo $Market;
-        echo ': ';
-        echo $sum;
-        echo ' Price: ';
+
+        //echo $Market;
+        //echo ': ';
+        //echo $sum;
+        //echo ' Price: ';
         $gettick = $bittrex->getTicker($Market);
         $json = json_decode(json_encode($gettick),true);
-        echo $json['Last'];
-        echo ' Time: ';
-        echo date("Y-m-d H:i:s");
-        echo '<br>';
+        //echo $json['Last'];
+        //echo ' Time: ';
+        //echo date("Y-m-d H:i:s");
+        //echo '<br>';
+
+        $analyser = $dbclient->coins->Analyser;
+        $analyser->InsertOne(array('MarketName'=>$Market, 'Score'=>$sum, 'Rate'=>$json['Last'], 'Time'=>date("Y-m-d H:i:s")));
+        //$Market, $sum, $json['Last'], date("Y-m-d H:i:s")
     }
 }
 ?>
