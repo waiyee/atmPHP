@@ -103,24 +103,22 @@ class DevClient
 
                     if ($answer->success == true) {
                         $closest_rate = $answer->result[0]->Rate;
-                        foreach($answer->result as $doc)
-                        {
 
-                            if ($ownOrder->Status =='buying' && $ownOrder->BuyOrder->Rate >= $doc->Rate )
-                            {
-                                $success = true;
-                                $quantity = $ownOrder->BuyOrder->Quantity;
-                                $rate = $ownOrder->BuyOrder->Rate;
-                                break;
-                            }
-                            if ($ownOrder->Status =='selling' && $ownOrder->SellOrder->Rate <= $doc->Rate )
-                            {
-                                $success = true;
-                                $quantity = $ownOrder->SellOrder->Quantity;
-                                $rate = $ownOrder->SellOrder->Rate;
-                                break;
-                            }
-                        };
+                        if ($ownOrder->Status =='buying' && $ownOrder->BuyOrder->Rate >= $closest_rate )
+                        {
+                            $success = true;
+                            $quantity = $answer->result[0]->Quantity;
+                            $rate = $answer->result[0]->Rate;
+                        }
+
+                        if ($ownOrder->Status =='selling' && $ownOrder->SellOrder->Rate <= $closest_rate )
+                        {
+                            $success = true;
+                            $quantity = $answer->result[0]->Quantity;
+                            $rate = $answer->result[0]->Rate;
+                        }
+
+
                         if ($success)
                         {
                             $result = '{

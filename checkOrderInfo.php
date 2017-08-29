@@ -13,10 +13,12 @@ $order = $OB->findOne(array('_id'=>  new \MongoDB\BSON\ObjectID($oid)));
 if ($order->Status == 'buying') {
     $uuid = $order->BuyOrder->uuid;
     $type = 'buy';
+    $print_rate = number_format($order->BuyOrder->Rate,8);
 }
 else{
     $uuid = $order->SellOrder->uuid;
     $type = 'sell';
+    $print_rate = number_format($order->BuyOrder->Rate,8);
 }
 
 // Call order API to check complete buy order or not
@@ -41,7 +43,7 @@ if (!$buy_result->IsOpen) {
 }
 else
 {
-    $return = '['.date('Y-m-d H:i:s').'] '.$order->MarketName.' '.'Not yet '.$type.' at '.number_format($order->BuyOrder->Rate,8).' Market price : '.number_format($buy_result->PricePerUnit, 8).'<br/>';
+    $return = '['.date('Y-m-d H:i:s').'] '.$order->MarketName.' '.'Not yet '.$type.' at '.$print_rate.' Market price : '.number_format($buy_result->PricePerUnit, 8).'<br/>';
 }
 
 echo $return;
