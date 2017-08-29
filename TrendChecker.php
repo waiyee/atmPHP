@@ -1,5 +1,5 @@
 <?php
-include('app.php');
+//include('app.php');
 
 function checkCandle($dbclient, $Markets,$bittrex)
 {

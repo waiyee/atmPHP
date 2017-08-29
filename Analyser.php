@@ -2,7 +2,7 @@
 include('app.php');
 include('TrendChecker.php');
 /** GET MarketSummaries**/
-require_once('getMarketSummaries.php');
+//require_once('getMarketSummaries.php');
 //GetHighestVolumeMarkets($dbclient);
 
 

@@ -9,7 +9,7 @@
  * @param DB Client
  * @return boolean
  */
-function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db, &$sell_rate)
+function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db)
 {
     $exploeMrt = explode('-', $market);
 

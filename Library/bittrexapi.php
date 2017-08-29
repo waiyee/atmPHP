@@ -8,13 +8,12 @@ class Client
 {
 	private $baseUrl;
 	private $apiVersion = 'v1.1';
-	private $apiKey ='b16a576da6ce4c98a228a9c8fb358a9d';
-	private $apiSecret = '311cf541a233410c8f8d84d1a0e03d96';
+	private $apiKey =APIKEY;
+	private $apiSecret = APISECRET;
 	
 	public function __construct ()
-	{
-		
-		$this->baseUrl   = 'https://bittrex.com/api/'.$this->apiVersion.'/';		
+    {
+        $this->baseUrl   = 'https://bittrex.com/api/'.$this->apiVersion.'/';
 	}
 	/**
 	 * Invoke API
@@ -28,11 +27,9 @@ class Client
 		try
 		{
 		$uri  = $this->baseUrl.$method;
-		if ($apiKey == false) {
-			$params['apikey'] = $this->apiKey;
-			$params['nonce']  = time();
-		}
-		
+        $params['apikey'] = $this->apiKey;
+        $params['nonce']  = time();
+
 		if (!empty($params)) {
 			$uri .= '?'.http_build_query($params);
 		}
