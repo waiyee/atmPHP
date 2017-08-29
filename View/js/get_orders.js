@@ -6,6 +6,7 @@ $(document).ready(function(){
             dataType: "json",
             success: function(data){
                 $.each( data, function( key, val ) {
+
                     $.ajax({
                         url: "checkOrderInfo.php",
                         data: {oid:val.$oid},

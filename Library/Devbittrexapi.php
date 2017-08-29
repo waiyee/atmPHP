@@ -48,7 +48,8 @@ class DevClient
                 $result = curl_exec($ch);
                 $answer = json_decode($result);
             */
-         $uuid = hash("md5", time());
+         $uuid = hash("md5", time().rand(10,9999999999));
+
         switch ($method)
         {
             case 'market/buylimit':
@@ -59,13 +60,17 @@ class DevClient
                                         "uuid" : "'.$uuid.'"
                                     }
                             }';
+                break;
             case 'market/selllimit':
                 $result = '{
                                     "success" : true,
                                     "message" : "",
                                     "result" : {
                                             "uuid" : "'.$uuid.'"
-                                        }';
+                                        }
+                                   }';
+
+                break;
             case 'account/getorder':
                 $OD = $this->dbclient->coins->OwnOrderBook;
 
@@ -95,9 +100,12 @@ class DevClient
                     $success = false;
                     $quantity = 0;
                     $rate = 0;
+
                     if ($answer->success == true) {
+                        $closest_rate = $answer->result[0]->Rate;
                         foreach($answer->result as $doc)
                         {
+
                             if ($ownOrder->Status =='buying' && $ownOrder->BuyOrder->Rate >= $doc->Rate )
                             {
                                 $success = true;
@@ -164,7 +172,7 @@ class DevClient
                                                             "CommissionReserveRemaining" : 0.00000002,
                                                             "CommissionPaid" : 0.00000000,
                                                             "Price" : '.$rate.',
-                                                            "PricePerUnit" : null,
+                                                            "PricePerUnit" : '.$closest_rate.',
                                                             "Opened" : "2014-07-13T07:45:46.27",
                                                             "Closed" : null,
                                                             "IsOpen" : true,
@@ -180,15 +188,12 @@ class DevClient
                         }
                     }
                 }
+                break;
         }
 
-        $answer = json_decode($result);
+        if (strlen($result)>0)
+            $answer = json_decode($result);
 
-
-		if ($answer->success == false) {			
-			//throw new \Exception ($answer->message);
-			throw new \Exception (curl_error($ch), curl_errno($ch));
-		}
 		return $answer->result;
 		}catch(Exception $e)
 		{
