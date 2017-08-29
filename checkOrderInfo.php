@@ -18,7 +18,7 @@ if ($order->Status == 'buying') {
 else{
     $uuid = $order->SellOrder->uuid;
     $type = 'sell';
-    $print_rate = number_format($order->BuyOrder->Rate,8);
+    $print_rate = number_format($order->SellOrder->Rate,8);
 }
 
 // Call order API to check complete buy order or not
