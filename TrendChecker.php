@@ -163,13 +163,15 @@ function checkCandle($dbclient, $Markets,$bittrex)
         //echo ' Price: ';
         $gettick = $bittrex->getTicker($Market);
         $json = json_decode(json_encode($gettick),true);
-        //echo $json['Last'];
         //echo ' Time: ';
-        //echo date("Y-m-d H:i:s");
-        //echo '<br>';
+        $now = new DateTime(); //current date/time
+        $timenow = $now->format('Y-m-d H:i:s');
+        $now->add(new DateInterval("PT30M"));
+        $new_time = $now->format('Y-m-d H:i:s');
+
 
         $analyser = $dbclient->coins->Analyser;
-        $analyser->InsertOne(array('MarketName'=>$Market, 'Score'=>$sum, 'Rate'=>$json['Last'], 'Time'=>date("Y-m-d H:i:s")));
+        $analyser->InsertOne(array('MarketName'=>$Market, 'Score'=>$sum, 'Rate'=>$json['Last'], 'Time'=>$timenow, 'Expire'=>$new_time, 'Used'=>0));
         //$Market, $sum, $json['Last'], date("Y-m-d H:i:s")
     }
 }
