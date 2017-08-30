@@ -79,57 +79,62 @@ class DevClient
                         array(array('BuyOrder.uuid'=>$params['uuid']), array('SellOrder.uuid'=>$params['uuid']))
                 ));
 
-                if ($ownOrder->Status == 'buying' or $ownOrder->Status == 'selling')
-                {
-                    $uri  = $this->baseUrl.'public/getorderbook';
-                    $params['market'] = $ownOrder->MarketName;
-                    if ($ownOrder->Status == 'buying')
-                        $params['type'] = 'sell';
-                    else
-                        $params['type'] = 'buy';
-                    if (!empty($params)) {
-                        $uri .= '?'.http_build_query($params);
-                    }
-
-                    $sign = hash_hmac ('sha512', $uri, $this->apiSecret);
-                    $ch = curl_init ($uri);
-                    curl_setopt ($ch, CURLOPT_HTTPHEADER, array('apisign: '.$sign));
-                    curl_setopt ($ch, CURLOPT_RETURNTRANSFER, true);
-                    $result = curl_exec($ch);
-                    $answer = json_decode($result);
-                    $success = false;
-                    $quantity = 0;
-                    $rate = 0;
-
-                    if ($answer->success == true) {
-                        $closest_rate = $answer->result[0]->Rate;
-
-                        if ($ownOrder->Status =='buying' && $ownOrder->BuyOrder->Rate >= $closest_rate )
+                if ($ownOrder) {
+                    if ($ownOrder->Status == 'buying' or $ownOrder->Status == 'selling') {
+                        $uri = $this->baseUrl . 'public/getorderbook';
+                        $params['market'] = $ownOrder->MarketName;
+                        if ($ownOrder->Status == 'buying')
                         {
-                            $success = true;
-                            $quantity = $answer->result[0]->Quantity;
-                            $rate = $answer->result[0]->Rate;
+                            $params['type'] = 'sell';
+                            $limit = 'buy';
+                        }
+                        elseif ($ownOrder->Status == 'selling')
+                        {
+                            $params['type'] = 'buy';
+                            $limit = 'sell';
+                        }
+                        else
+                            break;
+                        if (!empty($params)) {
+                            $uri .= '?' . http_build_query($params);
                         }
 
-                        if ($ownOrder->Status =='selling' && $ownOrder->SellOrder->Rate <= $closest_rate )
-                        {
-                            $success = true;
-                            $quantity = $answer->result[0]->Quantity;
-                            $rate = $answer->result[0]->Rate;
-                        }
+                        $sign = hash_hmac('sha512', $uri, $this->apiSecret);
+                        $ch = curl_init($uri);
+                        curl_setopt($ch, CURLOPT_HTTPHEADER, array('apisign: ' . $sign));
+                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                        $result = curl_exec($ch);
+                        $answer = json_decode($result);
+                        $success = false;
+                        $quantity = 0;
+                        $rate = 0;
+
+                        if ($answer->success == true) {
+                            $closest_rate = $answer->result[0]->Rate;
+
+                            if ($ownOrder->Status == 'buying' && $ownOrder->BuyOrder->Rate >= $closest_rate) {
+                                $success = true;
+                                $quantity = $answer->result[0]->Quantity;
+                                $rate = $answer->result[0]->Rate;
+                            }
+
+                            if ($ownOrder->Status == 'selling' && $ownOrder->SellOrder->Rate <= $closest_rate) {
+                                $success = true;
+                                $quantity = $answer->result[0]->Quantity;
+                                $rate = $answer->result[0]->Rate;
+                            }
 
 
-                        if ($success)
-                        {
-                            $result = '{
+                            if ($success) {
+                                $result = '{
                                                         "success" : true,
                                                         "message" : "",
                                                         "result" : {
                                                             "AccountId" : null,
-                                                            "OrderUuid" : "'.$params['uuid'].'",
-                                                            "Exchange" : "'.$params['market'].'",
-                                                            "Type" : "LIMIT_'.strtoupper($params['type']).'",
-                                                            "Quantity" : '.$quantity.',
+                                                            "OrderUuid" : "' . $params['uuid'] . '",
+                                                            "Exchange" : "' . $params['market'] . '",
+                                                            "Type" : "LIMIT_' . strtoupper($limit) . '",
+                                                            "Quantity" : ' . $quantity . ',
                                                             "QuantityRemaining" : 0.00000000,
                                                             "Limit" : 0.00000001,
                                                             "Reserved" : 0.00001000,
@@ -137,7 +142,7 @@ class DevClient
                                                             "CommissionReserved" : 0.00000002,
                                                             "CommissionReserveRemaining" : 0.00000002,
                                                             "CommissionPaid" : 0.00000000,
-                                                            "Price" : '.$rate.',
+                                                            "Price" : ' . $rate . ',
                                                             "PricePerUnit" : null,
                                                             "Opened" : "2014-07-13T07:45:46.27",
                                                             "Closed" : "2014-07-13T07:45:46.27",
@@ -150,18 +155,16 @@ class DevClient
                                                             "ConditionTarget" : null
                                                         }
                                                     }';
-                        }
-                        else
-                        {
-                            $result = '{
+                            } else {
+                                $result = '{
                                                         "success" : true,
                                                         "message" : "",
                                                         "result" : {
                                                             "AccountId" : null,
-                                                            "OrderUuid" : "'.$params['uuid'].'",
-                                                            "Exchange" : "'.$params['market'].'",
-                                                            "Type" : "LIMIT_'.strtoupper($params['type']).'",
-                                                            "Quantity" : '.$quantity.',
+                                                            "OrderUuid" : "' . $params['uuid'] . '",
+                                                            "Exchange" : "' . $params['market'] . '",
+                                                            "Type" : "LIMIT_' . strtoupper($limit) . '",
+                                                            "Quantity" : ' . $quantity . ',
                                                             "QuantityRemaining" : 0.00000000,
                                                             "Limit" : 0.00000001,
                                                             "Reserved" : 0.00001000,
@@ -169,8 +172,8 @@ class DevClient
                                                             "CommissionReserved" : 0.00000002,
                                                             "CommissionReserveRemaining" : 0.00000002,
                                                             "CommissionPaid" : 0.00000000,
-                                                            "Price" : '.$rate.',
-                                                            "PricePerUnit" : '.$closest_rate.',
+                                                            "Price" : ' . $rate . ',
+                                                            "PricePerUnit" : ' . $closest_rate . ',
                                                             "Opened" : "2014-07-13T07:45:46.27",
                                                             "Closed" : null,
                                                             "IsOpen" : true,
@@ -183,6 +186,7 @@ class DevClient
                                                         }
                                                     }';
 
+                            }
                         }
                     }
                 }

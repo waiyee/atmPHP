@@ -33,6 +33,7 @@ $markets = $analyser->find(
 */
 
 foreach ($markets as $market) {
+
     if ($market->doc->Score > 0 ) {
         $rate = round($market->doc->Rate, 8);
 
