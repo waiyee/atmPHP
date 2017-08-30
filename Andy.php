@@ -1,11 +1,15 @@
 <?php
 include('app.php');
 include('TrendChecker.php');
-/** GET MarketSummaries**/
-//require_once('getMarketSummaries.php');
-//GetHighestVolumeMarkets($dbclient);
 echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
+
+/** GET MarketSummaries**/
 echo 'SelectMarkets: '.date('Y-m-d H:i:s').'<br/>';
+include('getMarketSummaries.php');
+//GetHighestVolumeMarkets($dbclient);
+
+$SelectedMarkets = $dbclient->coins->SelectedMarkets;
+$SelectedMarkets->drop();
 /** GET TOP 15 Volume Markets**/
 //function GetHighestVolumeMarkets($dbclient, $top = 15){
     $collection = $dbclient->coins->MarketSummaries;
