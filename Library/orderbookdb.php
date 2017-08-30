@@ -78,6 +78,20 @@ function boughtOrder($id, $api_status, $db)
  * @param $db DB Client
  * @return mixed
  */
+function SoldOrders($id, $api_status, $db)
+{
+    $OB = $db->coins->OwnOrderBook;
+
+    $result = $OB->Update(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
+    return $result->getModifiedCount();
+}
+
+/**
+ *  Settle sell order
+ * @param $id   string own DB ID
+ * @param $db DB Client
+ * @return mixed
+ */
 function SoldOrder($id, $api_status, $db)
 {
     $OB = $db->coins->OwnOrderBook;
