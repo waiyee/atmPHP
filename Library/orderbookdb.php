@@ -59,6 +59,24 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db)
 }
 
 /**
+ *  Settle buy orders
+ * @param $uuid  Bittrex sell order uuid
+ * @param $db DB Client
+ * @return mixed
+ */
+function BoughtOrders($uuid, $api_status, $db)
+{
+    $OB = $db->coins->OwnOrderBook;
+    foreach ($uuid as $i)
+    {
+        $result = $OB->UpdateOne(array('BuyOrder.uuid'=>$i), array('$set'=>array('Status'=>'bought', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
+    }
+    
+    return $result->getModifiedCount();
+}
+
+
+/**
  *  Settle buy order
  * @param $id   string own DB ID
  * @param $db DB Client
@@ -73,8 +91,8 @@ function boughtOrder($id, $api_status, $db)
 }
 
 /**
- *  Settle sell order
- * @param $id   string own DB ID
+ *  Settle sell orders
+ * @param $uuid  Bittrex sell order uuid
  * @param $db DB Client
  * @return mixed
  */
