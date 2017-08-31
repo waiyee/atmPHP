@@ -58,7 +58,7 @@ if($opening_orders) {
         SoldOrders($sold_orders, $api_status, $dbclient);
 }
 
-updateWallet($bittrex,$dbclient);
+//updateWallet($bittrex,$dbclient);
 
 // Search Analyser for valid record to place buy order
 $analyser = $dbclient->coins->Analyser;
@@ -100,29 +100,30 @@ foreach ($valid_mkt as $market) {
     $rate = round($market->doc->Rate, 8);
 
     $quantity = round(( $btc_balance * BTCUSAGE) / $rate, 8);
-
-    $btc_balance = $btc_balance - ($rate*$quantity);
-    $exits_now = $dbclient->coins->OwnOrderBook->findOne(
-        array('$and'=>
-        array(
-            array ('MarketName' => $market->doc->MarketName) ,
-            array('$or'=>
+    if ($quantity > 0 ) {
+        $btc_balance = $btc_balance - ($rate * $quantity);
+        $exits_now = $dbclient->coins->OwnOrderBook->findOne(
+            array('$and' =>
                 array(
-                    array('Status'=>'buying'), array('Status'=>'selling')
-                )
-            )
-        ))
+                    array('MarketName' => $market->doc->MarketName),
+                    array('$or' =>
+                        array(
+                            array('Status' => 'buying'), array('Status' => 'selling')
+                        )
+                    )
+                ))
 
-    );
-    if (!$exits_now) {
-        $buy_result = $devbittrex->buyLimit($market->doc->MarketName, $quantity, $rate);
-        if ($buy_result->uuid) {
-            $api_status = '';
-            // Insert order into db
-            $insert_id = buyLimitDB($buy_result->uuid, $market->doc->MarketName, $quantity, $rate, $api_status, $dbclient);
+        );
+        if (!$exits_now) {
+            $buy_result = $devbittrex->buyLimit($market->doc->MarketName, $quantity, $rate);
+            if ($buy_result->uuid) {
+                $api_status = '';
+                // Insert order into db
+                $insert_id = buyLimitDB($buy_result->uuid, $market->doc->MarketName, $quantity, $rate, $api_status, $dbclient);
+            }
+            if ($insert_id)
+                echo '[' . date('Y-m-d H:i:s') . '] ' . $market->doc->MarketName . ' Buy at ' . number_format($rate, 8) . ' for ' . number_format($quantity, 9) . ' placed.<br/>Score: ' . $market->doc->Score . '<br/>';
         }
-        if ($insert_id)
-            echo '[' . date('Y-m-d H:i:s') . '] ' . $market->doc->MarketName . ' Buy at ' . number_format($rate, 8) . ' for ' . number_format($quantity, 9) . ' placed.<br/>Score: ' . $market->doc->Score . '<br/>';
     }
 }
 
