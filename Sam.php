@@ -60,9 +60,7 @@ if($opening_orders) {
             if ($sell_result->uuid) {
                 // Insert order into db
                 sellLimitDB($handling_order->_id, $sell_result->uuid, $api_status, $dbclient);
-                $btcAva = $dbclient->coins->WalletBalance->findOne(array('Currency' => 'BTC'));
 
-                $dbclient->coins->WalletBalance->UpdateOne(array('Currency' => 'BTC'), array('$set' => array('Available' => $btcAva->Balance + $handling_order->SellOrder->Total - $handling_order->BuyOrder->Total)));
                 $return = '[' . date('Y-m-d H:i:s') . '] ' . $handling_order->MarketName . ' Place sell order at rate ' . number_format($handling_order->SellOrder->Rate, 8) . '<br/>';
             }
 

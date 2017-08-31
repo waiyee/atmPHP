@@ -20,21 +20,21 @@ Sam.release();
 var A = setInterval(function(){
       Andy.open('http://localhost/btc/Andy.php', function(status){
 		   console.log('Andy Open');
-		   console.log(Andy.content);
+		   //console.log(Andy.content);
 	  }) ;
     }, 3000);
 
 var B = setInterval(function(){
 	Bobby.open('http://localhost/btc/Bobby.php', function(status){
 		console.log('Bobby Open');
-		console.log(Bobby.content);
+		//console.log(Bobby.content);
 	  }) ;
 }, 100);
 
 var S = setInterval(function(){
 	Sam.open('http://localhost/btc/Sam.php', function(status){
 		console.log('Sam Open');
-		 console.log(Sam.content);
+		//console.log(Sam.content);
 	  }) ;
 }, 100);
 

@@ -67,11 +67,15 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db)
 function BoughtOrders($uuid, $api_status, $db)
 {
     $OB = $db->coins->OwnOrderBook;
+    $wallet = $db->coins->WalletBalance->findOne(array('Currency' => 'BTC'));
+
     foreach ($uuid as $i)
     {
         $result = $OB->UpdateOne(array('BuyOrder.uuid'=>$i), array('$set'=>array('Status'=>'bought', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
+        $order = $OB->findOne(array('BuyOrder.uuid'=>$i));
+        $db->coins->WalletBalance->UpdateOne(array('Currency' => 'BTC'), array('$set' => array('Available' => $wallet->Balance - $order->BuyOrder->Total)));
     }
-    
+
     return $result->getModifiedCount();
 }
 
@@ -99,9 +103,13 @@ function boughtOrder($id, $api_status, $db)
 function SoldOrders($uuid, $api_status, $db)
 {
     $OB = $db->coins->OwnOrderBook;
+    $wallet = $db->coins->WalletBalance->findOne(array('Currency' => 'BTC'));
+
     foreach ($uuid as $i)
     {
         $result = $OB->UpdateOne(array('SellOrder.uuid'=>$i), array('$set'=>array('Status'=>'sold', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
+        $order = $OB->findOne(array('SellOrder.uuid'=>$i));
+        $db->coins->WalletBalance->UpdateOne(array('Currency' => 'BTC'), array('$set' => array('Available' => $wallet->Balance + $order->SellOrder->Total)));
     }
 
     return $result->getModifiedCount();
