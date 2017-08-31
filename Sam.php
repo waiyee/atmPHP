@@ -30,8 +30,7 @@ $OOB = $dbclient->coins->OwnOrderBook;
 
 if($opening_orders) {
     $opening_uuid = array();
-    foreach ($opening_orders as $opening_order)
-    {
+    foreach ($opening_orders as $opening_order) {
         $dump = array_push($opening_uuid, $opening_order->OrderUuid);
     }
 
@@ -41,36 +40,36 @@ if($opening_orders) {
     );
 
     $buying_uuid = array();
-    foreach($buying_orders as $buying_order)
-    {
+    foreach ($buying_orders as $buying_order) {
         $dump = array_push($buying_uuid, $buying_order->BuyOrder->uuid);
     }
 
-    $bought_orders = array_diff($buying_uuid,$opening_uuid);
+    $bought_orders = array_diff($buying_uuid, $opening_uuid);
 
-    if ($bought_orders)
+    if ($bought_orders) {
         BoughtOrders($bought_orders, $api_status, $dbclient);
-}
+        foreach ($bought_orders as $order) {
 
-foreach($bought_orders as $order) {
+            $handling_order = $dbclient->coins->OwnOrderBook->findOne(array('BuyOrder.uuid' => $order));
 
-    $handling_order = $dbclient->coins->OwnOrderBook->findOne(array('BuyOrder.uuid'=> $order));
+            $uuid = $handling_order->BuyOrder->uuid;
+            $type = 'buy';
+            $print_rate = number_format($handling_order->BuyOrder->Rate, 8);
+            //API
+            $sell_result = $devbittrex->sellLimit($handling_order->MarketName, $handling_order->SellOrder->Quantity, $handling_order->SellOrder->Rate);
+            if ($sell_result->uuid) {
+                // Insert order into db
+                sellLimitDB($handling_order->_id, $sell_result->uuid, $api_status, $dbclient);
+                $btcAva = $dbclient->coins->WalletBalance->findOne(array('Currency' => 'BTC'));
 
-    $uuid = $handling_order->BuyOrder->uuid;
-    $type = 'buy';
-    $print_rate = number_format($handling_order->BuyOrder->Rate, 8);
-    //API
-    $sell_result = $devbittrex->sellLimit($handling_order->MarketName, $handling_order->SellOrder->Quantity, $handling_order->SellOrder->Rate);
-    if ($sell_result->uuid) {
-        // Insert order into db
-        sellLimitDB($handling_order->_id, $sell_result->uuid, $api_status, $dbclient);
-        $btcAva = $dbclient->coins->WalletBalance->findOne(array('Currency'=>'BTC'));
+                $dbclient->coins->WalletBalance->UpdateOne(array('Currency' => 'BTC'), array('$set' => array('Available' => $btcAva->Balance + $handling_order->SellOrder->Total - $handling_order->BuyOrder->Total)));
+                $return = '[' . date('Y-m-d H:i:s') . '] ' . $handling_order->MarketName . ' Place sell order at rate ' . number_format($handling_order->SellOrder->Rate, 8) . '<br/>';
+            }
 
-        $dbclient->coins->WalletBalance->UpdateOne(array('Currency'=>'BTC'), array('$set'=>array('Available'=> $btcAva->Balance + $handling_order->SellOrder->Total -  $handling_order->BuyOrder->Total)));
-        $return = '[' . date('Y-m-d H:i:s') . '] ' . $handling_order->MarketName.  ' Place sell order at rate ' . number_format($handling_order->SellOrder->Rate, 8) . '<br/>';
+            echo $return;
+        }
     }
-
-    echo $return;
 }
+
 
 echo 'End: '.date('Y-m-d H:i:s').'<br/>';
