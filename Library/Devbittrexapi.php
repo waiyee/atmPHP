@@ -16,7 +16,106 @@ class DevClient
 		$this->baseUrl   = 'https://bittrex.com/api/'.$this->apiVersion.'/';
         $this->dbclient = new \MongoDB\Client("mongodb://localhost:27017");
 	}
-	/**
+
+    /**
+     *  Used for getting all opening orders to check match order book price or not
+     */
+    private function getOrders()
+    {
+        $OD = $this->dbclient->coins->OwnOrderBook;
+
+        $ownOrders = $OD->find(
+            array('$or'=>
+                array(array('Status'=>'buying'), array('Status'=>'selling'))
+            ));
+
+        $output = ' {
+                    "success" : true,
+                    "message" : "",
+                    "result" : [';
+        foreach ($ownOrders as $ownOrder) {
+
+            if ($ownOrder) {
+                if ($ownOrder->Status == 'buying' or $ownOrder->Status == 'selling') {
+                    $uri = $this->baseUrl . 'public/getorderbook';
+                    $params['market'] = $ownOrder->MarketName;
+                    if ($ownOrder->Status == 'buying') {
+                        $params['type'] = 'sell';
+                        $params['uuid'] = $ownOrder->BuyOrder->uuid;
+                        $limit = 'buy';
+                    } elseif ($ownOrder->Status == 'selling') {
+                        $params['type'] = 'buy';
+                        $params['uuid'] = $ownOrder->SellOrder->uuid;
+                        $limit = 'sell';
+                    }
+
+                    if (!empty($params)) {
+                        $uri .= '?' . http_build_query($params);
+                    }
+
+                    $sign = hash_hmac('sha512', $uri, $this->apiSecret);
+                    $ch = curl_init($uri);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, array('apisign: ' . $sign));
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    $result = curl_exec($ch);
+                    $answer = json_decode($result);
+                    $success = false;
+                    $quantity = 0;
+                    $rate = 0;
+
+                    if ($answer->success == true) {
+                        $closest_rate = $answer->result[0]->Rate;
+
+                        if ($ownOrder->Status == 'buying' && $ownOrder->BuyOrder->Rate >= $closest_rate) {
+                            $success = true;
+                            $quantity = $answer->result[0]->Quantity;
+                            $rate = $answer->result[0]->Rate;
+                        }
+
+                        if ($ownOrder->Status == 'selling' && $ownOrder->SellOrder->Rate <= $closest_rate) {
+                            $success = true;
+                            $quantity = $answer->result[0]->Quantity;
+                            $rate = $answer->result[0]->Rate;
+                        }
+
+                        if (!$success)  {
+                            $output = $output.'{
+                                                                    "AccountId" : null,
+                                                                    "OrderUuid" : "' . $params['uuid'] . '",
+                                                                    "Exchange" : "' . $params['market'] . '",
+                                                                    "Type" : "LIMIT_' . strtoupper($limit) . '",
+                                                                    "Quantity" : ' . $quantity . ',
+                                                                    "QuantityRemaining" : 0.00000000,
+                                                                    "Limit" : 0.00000001,
+                                                                    "Reserved" : 0.00001000,
+                                                                    "ReserveRemaining" : 0.00001000,
+                                                                    "CommissionReserved" : 0.00000002,
+                                                                    "CommissionReserveRemaining" : 0.00000002,
+                                                                    "CommissionPaid" : 0.00000000,
+                                                                    "Price" : ' . $rate . ',
+                                                                    "PricePerUnit" : ' . $closest_rate . ',
+                                                                    "Opened" : "2014-07-13T07:45:46.27",
+                                                                    "Closed" : null,
+                                                                    "IsOpen" : true,
+                                                                    "Sentinel" : "6c454604-22e2-4fb4-892e-179eede20972",
+                                                                    "CancelInitiated" : false,
+                                                                    "ImmediateOrCancel" : false,
+                                                                    "IsConditional" : false,
+                                                                    "Condition" : "NONE",
+                                                                    "ConditionTarget" : null
+                                                                },';
+
+                        }
+                    }
+                }
+            }
+        }
+        $output = rtrim($output, ',').']
+}';
+        return $output;
+    }
+
+    /**
 	 * Invoke API
 	 * @param string $method API method to call
 	 * @param array $params parameters
@@ -71,7 +170,11 @@ class DevClient
                                    }';
 
                 break;
+            case 'market/getopenorders':
+                $result = $this->getOrders();
+                break;
             case 'account/getorder':
+
                 $OD = $this->dbclient->coins->OwnOrderBook;
 
                 $ownOrder = $OD->findOne(
@@ -125,7 +228,7 @@ class DevClient
                             }
 
 
-                            if ($success) {
+                            if (!$success) {
                                 $result = '{
                                                         "success" : true,
                                                         "message" : "",
@@ -197,6 +300,7 @@ class DevClient
             $answer = json_decode($result);
 
 		return $answer->result;
+
 		}catch(Exception $e)
 		{
 			trigger_error(sprintf('Curl failed with error #%d: %s;', 

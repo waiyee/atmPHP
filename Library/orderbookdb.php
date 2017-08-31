@@ -78,11 +78,14 @@ function boughtOrder($id, $api_status, $db)
  * @param $db DB Client
  * @return mixed
  */
-function SoldOrders($id, $api_status, $db)
+function SoldOrders($uuid, $api_status, $db)
 {
     $OB = $db->coins->OwnOrderBook;
+    foreach ($uuid as $i)
+    {
+        $result = $OB->UpdateOne(array('SellOrder.uuid'=>$i), array('$set'=>array('Status'=>'sold', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
+    }
 
-    $result = $OB->Update(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
     return $result->getModifiedCount();
 }
 
