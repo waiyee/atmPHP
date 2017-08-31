@@ -26,7 +26,7 @@ $ops =
         array('$match' => array('_id' =>array('$regex' => 'BTC-'),
             'Summaries.BaseVolume' => array('$gt' => 600))),
         array('$sort' => array('Summaries.OpenBuyOrders' => -1)),
-        array('$limit' => 15)
+        array('$limit' => 30)
     );
 $result = $collection->aggregate($ops);
 $Markets = array();

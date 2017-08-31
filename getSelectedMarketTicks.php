@@ -16,7 +16,7 @@
 		$MarketName = $doc->MarketName;
 		//echo 'Start--'.$MarketName.date('Y-m-d H:i:s').'<br/>';
 
-		$MarkTicks = $bittrex->getTicks($MarketName, 'day');
+		$MarkTicks = $bittrex->getTicks($MarketName, 'thirtyMin');
 		//$MarkOB = $bittrex->getOrderBook($MarketName, 'both');
 
 		$ticks = $dbclient->coins->MarketDayTicks;
