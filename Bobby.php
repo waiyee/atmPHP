@@ -101,7 +101,7 @@ foreach ($valid_mkt as $market) {
 
     $quantity = round(( $btc_balance * BTCUSAGE) / $rate, 8);
     if ($quantity > 0 ) {
-        $btc_balance = $btc_balance - ($rate * $quantity);
+        $btc_balance = round($btc_balance - ($rate * $quantity), 8);
         $exits_now = $dbclient->coins->OwnOrderBook->findOne(
             array('$and' =>
                 array(
@@ -119,6 +119,9 @@ foreach ($valid_mkt as $market) {
             if ($buy_result->uuid) {
                 $api_status = '';
                 // Insert order into db
+
+                $wallet->UpdateOne(array('Currency' => 'BTC'), array('$set' => array('Available' => $btc_balance)));
+
                 $insert_id = buyLimitDB($buy_result->uuid, $market->doc->MarketName, $quantity, $rate, $api_status, $dbclient);
             }
             if ($insert_id)

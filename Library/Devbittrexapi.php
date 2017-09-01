@@ -160,6 +160,13 @@ class DevClient
                                     }
                             }';
                 break;
+            case 'market/cancel':
+                $result = '{
+                                "success" : true,
+                                "message" : "",
+                                "result" : null
+                            }';
+                   break;
             case 'market/selllimit':
                 $result = '{
                                     "success" : true,
@@ -173,147 +180,169 @@ class DevClient
             case 'market/getopenorders':
                 $result = $this->getOrders();
                 break;
-            case 'account/getorder':
+            case 'public/getticker':
+                  $uri  = $this->baseUrl.$method;
+               if ($apiKey == false) {
+                   $params['apikey'] = $this->apiKey;
+                   $params['nonce']  = time();
+               }
 
-                $OD = $this->dbclient->coins->OwnOrderBook;
+               if (!empty($params)) {
+                   $uri .= '?'.http_build_query($params);
+               }
 
-                $ownOrder = $OD->findOne(
-                    array('$or'=>
-                        array(array('BuyOrder.uuid'=>$params['uuid']), array('SellOrder.uuid'=>$params['uuid']))
-                ));
+               $sign = hash_hmac ('sha512', $uri, $this->apiSecret);
 
-                if ($ownOrder) {
-                    if ($ownOrder->Status == 'buying' or $ownOrder->Status == 'selling') {
-                        $uri = $this->baseUrl . 'public/getorderbook';
-                        $params['market'] = $ownOrder->MarketName;
-                        if ($ownOrder->Status == 'buying')
-                        {
-                            $params['type'] = 'sell';
-                            $limit = 'buy';
-                        }
-                        elseif ($ownOrder->Status == 'selling')
-                        {
-                            $params['type'] = 'buy';
-                            $limit = 'sell';
-                        }
-                        else
-                            break;
-                        if (!empty($params)) {
-                            $uri .= '?' . http_build_query($params);
-                        }
+               $ch = curl_init ($uri);
 
-                        $sign = hash_hmac('sha512', $uri, $this->apiSecret);
-                        $ch = curl_init($uri);
-                        curl_setopt($ch, CURLOPT_HTTPHEADER, array('apisign: ' . $sign));
-                        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                        $result = curl_exec($ch);
-                        $answer = json_decode($result);
-                        $success = false;
-                        $quantity = 0;
-                        $rate = 0;
+               curl_setopt ($ch, CURLOPT_HTTPHEADER, array('apisign: '.$sign));
 
-                        if ($answer->success == true) {
-                            $closest_rate = $answer->result[0]->Rate;
+               curl_setopt ($ch, CURLOPT_RETURNTRANSFER, true);
 
-                            if ($ownOrder->Status == 'buying' && $ownOrder->BuyOrder->Rate >= $closest_rate) {
-                                $success = true;
-                                $quantity = $answer->result[0]->Quantity;
-                                $rate = $answer->result[0]->Rate;
-                            }
+               $result = curl_exec($ch);
 
-                            if ($ownOrder->Status == 'selling' && $ownOrder->SellOrder->Rate <= $closest_rate) {
-                                $success = true;
-                                $quantity = $answer->result[0]->Quantity;
-                                $rate = $answer->result[0]->Rate;
-                            }
+               break;
+           case 'account/getorder':
+
+               $OD = $this->dbclient->coins->OwnOrderBook;
+
+               $ownOrder = $OD->findOne(
+                   array('$or'=>
+                       array(array('BuyOrder.uuid'=>$params['uuid']), array('SellOrder.uuid'=>$params['uuid']))
+               ));
+
+               if ($ownOrder) {
+                   if ($ownOrder->Status == 'buying' or $ownOrder->Status == 'selling') {
+                       $uri = $this->baseUrl . 'public/getorderbook';
+                       $params['market'] = $ownOrder->MarketName;
+                       if ($ownOrder->Status == 'buying')
+                       {
+                           $params['type'] = 'sell';
+                           $limit = 'buy';
+                       }
+                       elseif ($ownOrder->Status == 'selling')
+                       {
+                           $params['type'] = 'buy';
+                           $limit = 'sell';
+                       }
+                       else
+                           break;
+                       if (!empty($params)) {
+                           $uri .= '?' . http_build_query($params);
+                       }
+
+                       $sign = hash_hmac('sha512', $uri, $this->apiSecret);
+                       $ch = curl_init($uri);
+                       curl_setopt($ch, CURLOPT_HTTPHEADER, array('apisign: ' . $sign));
+                       curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                       $result = curl_exec($ch);
+                       $answer = json_decode($result);
+                       $success = false;
+                       $quantity = 0;
+                       $rate = 0;
+
+                       if ($answer->success == true) {
+                           $closest_rate = $answer->result[0]->Rate;
+
+                           if ($ownOrder->Status == 'buying' && $ownOrder->BuyOrder->Rate >= $closest_rate) {
+                               $success = true;
+                               $quantity = $answer->result[0]->Quantity;
+                               $rate = $answer->result[0]->Rate;
+                           }
+
+                           if ($ownOrder->Status == 'selling' && $ownOrder->SellOrder->Rate <= $closest_rate) {
+                               $success = true;
+                               $quantity = $answer->result[0]->Quantity;
+                               $rate = $answer->result[0]->Rate;
+                           }
 
 
-                            if (!$success) {
-                                $result = '{
-                                                        "success" : true,
-                                                        "message" : "",
-                                                        "result" : {
-                                                            "AccountId" : null,
-                                                            "OrderUuid" : "' . $params['uuid'] . '",
-                                                            "Exchange" : "' . $params['market'] . '",
-                                                            "Type" : "LIMIT_' . strtoupper($limit) . '",
-                                                            "Quantity" : ' . $quantity . ',
-                                                            "QuantityRemaining" : 0.00000000,
-                                                            "Limit" : 0.00000001,
-                                                            "Reserved" : 0.00001000,
-                                                            "ReserveRemaining" : 0.00001000,
-                                                            "CommissionReserved" : 0.00000002,
-                                                            "CommissionReserveRemaining" : 0.00000002,
-                                                            "CommissionPaid" : 0.00000000,
-                                                            "Price" : ' . $rate . ',
-                                                            "PricePerUnit" : null,
-                                                            "Opened" : "2014-07-13T07:45:46.27",
-                                                            "Closed" : "2014-07-13T07:45:46.27",
-                                                            "IsOpen" : false,
-                                                            "Sentinel" : "6c454604-22e2-4fb4-892e-179eede20972",
-                                                            "CancelInitiated" : false,
-                                                            "ImmediateOrCancel" : false,
-                                                            "IsConditional" : false,
-                                                            "Condition" : "NONE",
-                                                            "ConditionTarget" : null
-                                                        }
-                                                    }';
-                            } else {
-                                $result = '{
-                                                        "success" : true,
-                                                        "message" : "",
-                                                        "result" : {
-                                                            "AccountId" : null,
-                                                            "OrderUuid" : "' . $params['uuid'] . '",
-                                                            "Exchange" : "' . $params['market'] . '",
-                                                            "Type" : "LIMIT_' . strtoupper($limit) . '",
-                                                            "Quantity" : ' . $quantity . ',
-                                                            "QuantityRemaining" : 0.00000000,
-                                                            "Limit" : 0.00000001,
-                                                            "Reserved" : 0.00001000,
-                                                            "ReserveRemaining" : 0.00001000,
-                                                            "CommissionReserved" : 0.00000002,
-                                                            "CommissionReserveRemaining" : 0.00000002,
-                                                            "CommissionPaid" : 0.00000000,
-                                                            "Price" : ' . $rate . ',
-                                                            "PricePerUnit" : ' . $closest_rate . ',
-                                                            "Opened" : "2014-07-13T07:45:46.27",
-                                                            "Closed" : null,
-                                                            "IsOpen" : true,
-                                                            "Sentinel" : "6c454604-22e2-4fb4-892e-179eede20972",
-                                                            "CancelInitiated" : false,
-                                                            "ImmediateOrCancel" : false,
-                                                            "IsConditional" : false,
-                                                            "Condition" : "NONE",
-                                                            "ConditionTarget" : null
-                                                        }
-                                                    }';
+                           if (!$success) {
+                               $result = '{
+                                                       "success" : true,
+                                                       "message" : "",
+                                                       "result" : {
+                                                           "AccountId" : null,
+                                                           "OrderUuid" : "' . $params['uuid'] . '",
+                                                           "Exchange" : "' . $params['market'] . '",
+                                                           "Type" : "LIMIT_' . strtoupper($limit) . '",
+                                                           "Quantity" : ' . $quantity . ',
+                                                           "QuantityRemaining" : 0.00000000,
+                                                           "Limit" : 0.00000001,
+                                                           "Reserved" : 0.00001000,
+                                                           "ReserveRemaining" : 0.00001000,
+                                                           "CommissionReserved" : 0.00000002,
+                                                           "CommissionReserveRemaining" : 0.00000002,
+                                                           "CommissionPaid" : 0.00000000,
+                                                           "Price" : ' . $rate . ',
+                                                           "PricePerUnit" : null,
+                                                           "Opened" : "2014-07-13T07:45:46.27",
+                                                           "Closed" : "2014-07-13T07:45:46.27",
+                                                           "IsOpen" : false,
+                                                           "Sentinel" : "6c454604-22e2-4fb4-892e-179eede20972",
+                                                           "CancelInitiated" : false,
+                                                           "ImmediateOrCancel" : false,
+                                                           "IsConditional" : false,
+                                                           "Condition" : "NONE",
+                                                           "ConditionTarget" : null
+                                                       }
+                                                   }';
+                           } else {
+                               $result = '{
+                                                       "success" : true,
+                                                       "message" : "",
+                                                       "result" : {
+                                                           "AccountId" : null,
+                                                           "OrderUuid" : "' . $params['uuid'] . '",
+                                                           "Exchange" : "' . $params['market'] . '",
+                                                           "Type" : "LIMIT_' . strtoupper($limit) . '",
+                                                           "Quantity" : ' . $quantity . ',
+                                                           "QuantityRemaining" : 0.00000000,
+                                                           "Limit" : 0.00000001,
+                                                           "Reserved" : 0.00001000,
+                                                           "ReserveRemaining" : 0.00001000,
+                                                           "CommissionReserved" : 0.00000002,
+                                                           "CommissionReserveRemaining" : 0.00000002,
+                                                           "CommissionPaid" : 0.00000000,
+                                                           "Price" : ' . $rate . ',
+                                                           "PricePerUnit" : ' . $closest_rate . ',
+                                                           "Opened" : "2014-07-13T07:45:46.27",
+                                                           "Closed" : null,
+                                                           "IsOpen" : true,
+                                                           "Sentinel" : "6c454604-22e2-4fb4-892e-179eede20972",
+                                                           "CancelInitiated" : false,
+                                                           "ImmediateOrCancel" : false,
+                                                           "IsConditional" : false,
+                                                           "Condition" : "NONE",
+                                                           "ConditionTarget" : null
+                                                       }
+                                                   }';
 
-                            }
-                        }
-                    }
-                }
-                break;
-        }
+                           }
+                       }
+                   }
+               }
+               break;
+       }
 
-        if (strlen($result)>0)
-            $answer = json_decode($result);
+       if (strlen($result)>0)
+           $answer = json_decode($result);
 
-		return $answer->result;
+       return $answer->result;
 
-		}catch(Exception $e)
-		{
-			trigger_error(sprintf('Curl failed with error #%d: %s;', 
-			$e->getCode(), $e->getMessage()), 
-			E_USER_ERROR
-			);
-			
-		}
-	}
-	/**
-	 * Get the open and available trading markets at Bittrex along with other meta data.
-	 * @return array
-	 */
+       }catch(Exception $e)
+       {
+           trigger_error(sprintf('Curl failed with error #%d: %s;',
+           $e->getCode(), $e->getMessage()),
+           E_USER_ERROR
+           );
+
+       }
+   }
+   /**
+    * Get the open and available trading markets at Bittrex along with other meta data.
+    * @return array
+    */
 	public function getMarkets ()
 	{
 		return $this->call ('public/getmarkets');

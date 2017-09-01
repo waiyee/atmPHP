@@ -67,13 +67,12 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db)
 function BoughtOrders($uuid, $api_status, $db)
 {
     $OB = $db->coins->OwnOrderBook;
-    $wallet = $db->coins->WalletBalance->findOne(array('Currency' => 'BTC'));
+
 
     foreach ($uuid as $i)
     {
         $result = $OB->UpdateOne(array('BuyOrder.uuid'=>$i), array('$set'=>array('Status'=>'bought', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
-        $order = $OB->findOne(array('BuyOrder.uuid'=>$i));
-        $db->coins->WalletBalance->UpdateOne(array('Currency' => 'BTC'), array('$set' => array('Available' => $wallet->Balance - $order->BuyOrder->Total)));
+
     }
 
     return $result->getModifiedCount();
@@ -144,6 +143,39 @@ function sellLimitDB ($_id, $uuid, $api_status, $db)
     $result = $OB->UpdateOne(array('_id'=>$_id), array('$set'=>array('SellOrder.uuid'=>$uuid,'SellOrder.OrderTime'=>new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status,
         'Status'=>'selling', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
         )));
+
+    return $result->getModifiedCount();
+    //return $this->call ('market/buylimit', $params, true);
+}
+
+/*
+ * Cancel can't sell order
+ */
+function cancelSellDB ($uuid, $api_status, $db)
+{
+    $OB = $db->coins->OwnOrderBook;
+
+    $result = $OB->UpdateOne(array('SellOrder.uuid'=>$uuid), array('$set'=>array(
+        'Status'=>'cancel', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
+    )));
+
+    return $result->getModifiedCount();
+    //return $this->call ('market/buylimit', $params, true);
+}
+
+/*
+ * update sell order
+ */
+function updateSellDB ($_id, $uuid, $api_status, $rate, $quantity, $db)
+{
+    $OB = $db->coins->OwnOrderBook;
+
+    $sell_fee = ($quantity * $rate) * TXFEE;
+    $sell_total = round( ($quantity * $rate) * (1+TXFEE) , 8);
+
+    $result = $OB->UpdateOne(array('_id'=>$_id), array('$set'=>array('SellOrder.uuid'=>$uuid,'SellOrder.OrderTime'=>new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status,'SellOrder.Rate' => $rate, 'SellOrder.Quantity' => $quantity,
+        'SellOrder.Fee'=>$sell_fee, 'SellOrder.Total'=> $sell_total, 'Status'=>'selling', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
+    )));
 
     return $result->getModifiedCount();
     //return $this->call ('market/buylimit', $params, true);

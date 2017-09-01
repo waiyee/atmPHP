@@ -10,6 +10,7 @@ echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
  *  3. If completed, update DB for buy order
  *      3.1. Use API to place sell limit order
  *      3.2. Update place sell order in DB
+ *  4. Get selling orders that can't match rate for already TIMETOSELL hours and sell at market price
  */
 
 
@@ -69,5 +70,31 @@ if($opening_orders) {
     }
 }
 
+// Get selling orders that can't match rate for already TIMETOSELL hours
+$time_orders = $OOB->find(
+    array('Status'=>'selling'),
+    array("SellOrder.OrderTime" => array('$lte'=>new MongoDB\BSON\UTCDateTime(microtime(true) * 1000 - (TIMETOSELL*60*60*1000))))
+);
+
+foreach($time_orders as $time_order){
+    /*
+     * check time
+check status
+cancel opened sell
+place new market sell
+Record data
+     */
+    var_dump($time_order->SellOrder);
+    $cancel_result = $devbittrex->cancel($time_order->SellOrder->uuid);
+
+    echo 'Cancel order'  . $time_order->MarketName;
+        cancelSellDB($time_order->SellOrder->uuid, $api_status, $dbclient);
+        $market_price = $devbittrex->getTicker($time_order->MarketName);
+        if($market_price)
+        {
+            $new_uuid = $devbittrex->buyLimit($time_order->MarketName, $time_oder->SellOrder->Quantity, $market_price->last);
+            updateSellDB ($time_order->_id, $new_uuid->uuid, $api_status, $market_price->last, $time_oder->SellOrder->Quantity, $dbclient);
+        }
+}
 
 echo 'End: '.date('Y-m-d H:i:s').'<br/>';
