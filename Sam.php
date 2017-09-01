@@ -69,7 +69,7 @@ if($opening_orders) {
         }
     }
 }
-
+/*
 // Get selling orders that can't match rate for already TIMETOSELL hours
 $time_orders = $OOB->find(
     array('Status'=>'selling'),
@@ -77,13 +77,7 @@ $time_orders = $OOB->find(
 );
 
 foreach($time_orders as $time_order){
-    /*
-     * check time
-check status
-cancel opened sell
-place new market sell
-Record data
-     */
+ 
 
     $cancel_result = $devbittrex->cancel($time_order->SellOrder->uuid);
     if ($cancel_result != 'ERROR') {
@@ -92,10 +86,10 @@ Record data
 
         $market_price = $devbittrex->getTicker($time_order->MarketName);
         if ($market_price) {
-            $new_uuid = $devbittrex->sellLimit($time_order->MarketName, $time_oder->SellOrder->Quantity, $market_price->last);
+            $new_uuid = $devbittrex->sellLimit($time_order->MarketName, $time_order->SellOrder->Quantity, $market_price->last);
             updateSellDB($time_order->_id, $new_uuid->uuid, $api_status, $market_price->last, $time_oder->SellOrder->Quantity, $dbclient);
         }
     }
 }
-
+*/
 echo 'End: '.date('Y-m-d H:i:s').'<br/>';
