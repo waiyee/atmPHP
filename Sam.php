@@ -69,12 +69,16 @@ if($opening_orders) {
         }
     }
 }
-/*
+
 // Get selling orders that can't match rate for already TIMETOSELL hours
 $time_orders = $OOB->find(
+    array('$and'=>
+    array(
     array('Status'=>'selling'),
-    array("SellOrder.OrderTime" => array('$lte'=>new MongoDB\BSON\UTCDateTime(microtime(true) * 1000 - (TIMETOSELL*60*60*1000))))
+    array("SellOrder.OrderTime" => array('$lt'=>new MongoDB\BSON\UTCDateTime(microtime(true) * 1000 - (TIMETOSELL*60*60*1000))))
+    ))
 );
+
 
 foreach($time_orders as $time_order){
 
@@ -91,5 +95,5 @@ foreach($time_orders as $time_order){
         }
     }
 }
-*/
+
 echo 'End: '.date('Y-m-d H:i:s').'<br/>';
