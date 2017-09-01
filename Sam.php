@@ -77,7 +77,7 @@ $time_orders = $OOB->find(
 );
 
 foreach($time_orders as $time_order){
- 
+
 
     $cancel_result = $devbittrex->cancel($time_order->SellOrder->uuid);
     if ($cancel_result != 'ERROR') {

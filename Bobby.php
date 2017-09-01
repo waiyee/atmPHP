@@ -100,7 +100,7 @@ foreach ($valid_mkt as $market) {
     $rate = round($market->doc->Rate, 8);
 
     $quantity = round(( $btc_balance * BTCUSAGE) / $rate, 8);
-    if ($quantity > 0 ) {
+    if ($quantity > 0 && $rate > 0 ) {
         $btc_balance = round($btc_balance - ($rate * $quantity), 8);
         $exits_now = $dbclient->coins->OwnOrderBook->findOne(
             array('$and' =>
