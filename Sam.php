@@ -84,17 +84,18 @@ cancel opened sell
 place new market sell
 Record data
      */
-    var_dump($time_order->SellOrder);
-    $cancel_result = $devbittrex->cancel($time_order->SellOrder->uuid);
 
-    echo 'Cancel order'  . $time_order->MarketName;
+    $cancel_result = $devbittrex->cancel($time_order->SellOrder->uuid);
+    if ($cancel_result != 'ERROR') {
+        echo 'Cancel order ' . $time_order->MarketName;
         cancelSellDB($time_order->SellOrder->uuid, $api_status, $dbclient);
+
         $market_price = $devbittrex->getTicker($time_order->MarketName);
-        if($market_price)
-        {
-            $new_uuid = $devbittrex->buyLimit($time_order->MarketName, $time_oder->SellOrder->Quantity, $market_price->last);
-            updateSellDB ($time_order->_id, $new_uuid->uuid, $api_status, $market_price->last, $time_oder->SellOrder->Quantity, $dbclient);
+        if ($market_price) {
+            $new_uuid = $devbittrex->sellLimit($time_order->MarketName, $time_oder->SellOrder->Quantity, $market_price->last);
+            updateSellDB($time_order->_id, $new_uuid->uuid, $api_status, $market_price->last, $time_oder->SellOrder->Quantity, $dbclient);
         }
+    }
 }
 
 echo 'End: '.date('Y-m-d H:i:s').'<br/>';

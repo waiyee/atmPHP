@@ -47,7 +47,8 @@ class Client
 		
 		if ($answer->success == false) {			
 			//throw new \Exception ($answer->message);
-			throw new \Exception (curl_error($ch), curl_errno($ch));
+			//throw new \Exception (curl_error($ch), curl_errno($ch));
+            return 'ERROR';
 		}
 		return $answer->result;
 		}catch(Exception $e)
