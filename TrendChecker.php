@@ -169,7 +169,10 @@ function checkCandle($dbclient, $Markets,$bittrex)
         $now->add(new DateInterval("PT30M"));
         $new_time = $now->format('Y-m-d H:i:s');
 
-
+        if(empty($json['Last'])){
+            break;
+        }
+        
         $analyser = $dbclient->coins->Analyser;
         $analyser->InsertOne(array('MarketName'=>$Market, 'Score'=>$sum, 'Rate'=>$json['Last'], 'Time'=>$timenow, 'Expire'=>$new_time, 'Used'=>0));
         //$Market, $sum, $json['Last'], date("Y-m-d H:i:s")

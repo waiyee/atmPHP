@@ -103,6 +103,9 @@ foreach ($valid_mkt as $market) {
         * if balance left only can buy once, use all to buy
         * */
     $rate = round($market->doc->Rate, 8);
+    if(empty($rate)){
+        break;
+    }
 
     if ( $btc_balance - (MINTRADESIZE*2) > 0 )
         $quantity = round( MINTRADESIZE / $rate,8 );
