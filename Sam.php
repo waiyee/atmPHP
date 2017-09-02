@@ -36,7 +36,8 @@ if($opening_orders) {
     }
 
     $buying_orders = $OOB->find(
-        array('Status' => 'buying'),
+
+        array('Status' => array('$in' =>array('bought', 'buying'))),
         array('BuyOrder.uuid' => 1, '_id' => 0)
     );
 
