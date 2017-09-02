@@ -63,6 +63,13 @@ if($opening_orders) {
             if (SELLREMAIN == 1){
                 $balance = $devbittrex->getBalance($handling_order->MarketCurrency);
                 $Qty = $balance->Available;
+
+                //UPDATE OwnOrderBook
+                $OOB->UpdateOne(array('_id'=>$handling_order->_id), array('$set'=>array(
+                    'SellOrder.Quantity' => round($Qty, 8),
+                    'SellOrder.Total' => round($handling_order->SellOrder->Rate * $Qty, 8),
+                    'SellOrder.Fee' => round(( $handling_order->SellOrder->Rate * $Qty ) * TXFEE, 8)
+                )));
             }
 
             //API
