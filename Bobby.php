@@ -1,9 +1,9 @@
 <?php
 include('app.php');
-require_once 'library/devbittrexapi.php';
+/*require_once 'library/devbittrexapi.php';
 use atm\devbittrex\DevClient;
 $devbittrex = new DevClient();
-
+*/
 /** Buyer
  *   1. Use API to check selling order finish or not and count for opening orders
  *   2. Update BTC wallet
@@ -30,7 +30,7 @@ foreach($selling_orders as $selling_order)
 }*/
 
 // API get all opening orders
-$opening_orders = $devbittrex->getOpenOrders();
+$opening_orders = $bittrex->getOpenOrders();
 
 $api_status = '';
 
@@ -113,21 +113,21 @@ foreach ($valid_mkt as $market) {
         $quantity = round($btc_balance / $rate, 8);
 
     if ($quantity * $rate >= MINTRADESIZE ) {
-        $btc_balance = round($btc_balance - ($rate * $quantity), 8);
+        $btc_balance = round($btc_balance - ($rate * $quantity *(1+TXFEE) ), 8);
         $exits_now = $dbclient->coins->OwnOrderBook->findOne(
             array('$and' =>
                 array(
                     array('MarketName' => $market->doc->MarketName),
                     array('$or' =>
                         array(
-                            array('Status' => 'buying'), array('Status' => 'selling')
+                            array('Status' => 'buying'), array('Status' => 'selling'), array('Status' => 'bought')
                         )
                     )
                 ))
 
         );
         if (!$exits_now) {
-            $buy_result = $devbittrex->buyLimit($market->doc->MarketName, $quantity, $rate);
+            $buy_result = $bittrex->buyLimit($market->doc->MarketName, $quantity, $rate);
             if ($buy_result->uuid) {
                 $api_status = '';
                 // Insert order into db

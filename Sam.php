@@ -1,8 +1,8 @@
 <?php
 include('app.php');
-require_once 'library/devbittrexapi.php';
+/*require_once 'library/devbittrexapi.php';
 use atm\devbittrex\DevClient;
-$devbittrex = new DevClient();
+$devbittrex = new DevClient();*/
 echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
 /** Seller
  *  1. Get non-complete buying orders from DB
@@ -18,7 +18,7 @@ echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
 //$oid = '59a589df44cf4836100034ff';
 $temp =$dbclient->coins->tempOpeningOrders;
 $temp->drop();
-$opening_orders = $devbittrex->getOpenOrders();
+$opening_orders = $bittrex->getOpenOrders();
 $api_status = '';
 
 $return='';
@@ -61,7 +61,7 @@ if($opening_orders) {
             $Qty = $handling_order->SellOrder->Quantity;
 
             if (SELLREMAIN == 1){
-                $balance = $devbittrex->getBalance($handling_order->MarketCurrency);
+                $balance = $bittrex->getBalance($handling_order->MarketCurrency);
                 $Qty = $balance->Available;
 
                 //UPDATE OwnOrderBook
@@ -73,7 +73,7 @@ if($opening_orders) {
             }
 
             //API
-            $sell_result = $devbittrex->sellLimit($handling_order->MarketName, $Qty, $handling_order->SellOrder->Rate);
+            $sell_result = $bittrex->sellLimit($handling_order->MarketName, $Qty, $handling_order->SellOrder->Rate);
             if ($sell_result->uuid) {
                 // Insert order into db
                 sellLimitDB($handling_order->_id, $sell_result->uuid, $api_status, $dbclient);
@@ -99,14 +99,14 @@ $time_orders = $OOB->find(
 foreach($time_orders as $time_order){
 
 
-    $cancel_result = $devbittrex->cancel($time_order->SellOrder->uuid);
+    $cancel_result = $bittrex->cancel($time_order->SellOrder->uuid);
     if ($cancel_result != 'ERROR') {
         echo 'Cancel order ' . $time_order->MarketName;
         cancelSellDB($time_order->SellOrder->uuid, $api_status, $dbclient);
 
-        $market_price = $devbittrex->getTicker($time_order->MarketName);
+        $market_price = $bittrex->getTicker($time_order->MarketName);
         if ($market_price) {
-            $new_uuid = $devbittrex->sellLimit($time_order->MarketName, $time_order->SellOrder->Quantity, $market_price->last);
+            $new_uuid = $bittrex->sellLimit($time_order->MarketName, $time_order->SellOrder->Quantity, $market_price->last);
             updateSellDB($time_order->_id, $new_uuid->uuid, $api_status, $market_price->last, $time_oder->SellOrder->Quantity, $dbclient);
         }
     }
