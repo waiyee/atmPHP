@@ -69,7 +69,7 @@ $ops =
         array(
             '$sort' => array('Time' => 1, 'Score'=>1)
         ),
-        array(
+            array(
             '$match' => array('Used' => 0, 'Expire' => array('$gte' => $now ), 'Score' => array('$gt' => 0))
         ),
         array(
@@ -97,10 +97,19 @@ $btcAva = $wallet->findOne(array('Currency'=>'BTC'));
 $btc_balance = $btcAva->Balance;
 
 foreach ($valid_mkt as $market) {
+    /**
+        * USE FIXED TRADE SIZE AS TOTAL
+        * If balance can buy more than 2 times, use only Min Trade size
+        * if balance left only can buy once, use all to buy
+        * */
     $rate = round($market->doc->Rate, 8);
 
-    $quantity = round(( $btc_balance * BTCUSAGE) / $rate, 8);
-    if ($quantity > 0 && $rate > 0 ) {
+    if ( $btc_balance - (MINTRADESIZE*2) > 0 )
+        $quantity = round( MINTRADESIZE / $rate,8 );
+    else if ($btc_balance > 0 )
+        $quantity = round($btc_balance / $rate, 8);
+
+    if ($quantity * $rate >= MINTRADESIZE ) {
         $btc_balance = round($btc_balance - ($rate * $quantity), 8);
         $exits_now = $dbclient->coins->OwnOrderBook->findOne(
             array('$and' =>
