@@ -56,8 +56,17 @@ if($opening_orders) {
             $uuid = $handling_order->BuyOrder->uuid;
             $type = 'buy';
             $print_rate = number_format($handling_order->BuyOrder->Rate, 8);
+
+            //empty the wallet, config SELLALL
+            $Qty = $handling_order->SellOrder->Quantity;
+
+            if (SELLREMAIN == 1){
+                $balance = $devbittrex->getBalance($handling_order->MarketCurrency);
+                $Qty = $balance->Available;
+            }
+
             //API
-            $sell_result = $devbittrex->sellLimit($handling_order->MarketName, $handling_order->SellOrder->Quantity, $handling_order->SellOrder->Rate);
+            $sell_result = $devbittrex->sellLimit($handling_order->MarketName, $Qty, $handling_order->SellOrder->Rate);
             if ($sell_result->uuid) {
                 // Insert order into db
                 sellLimitDB($handling_order->_id, $sell_result->uuid, $api_status, $dbclient);
