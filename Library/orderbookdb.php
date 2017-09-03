@@ -196,3 +196,16 @@ function updateSellDB ($_id, $uuid, $api_status, $rate, $quantity, $db)
     return $result->getModifiedCount();
     //return $this->call ('market/buylimit', $params, true);
 }
+
+/**
+ * Update order price only
+ */
+function updatePriceDB ($_id, $buy_rate, $buy_fee, $buy_total, $sell_rate,$sell_fee, $sell_total, $db)
+{
+    $OB = $db->coins->OwnOrderBook;
+    $result = $OB->UpdateOne(array('_id'=>$_id), array('$set'=>array('BuyOrder.Rate'=> $buy_rate, 'BuyOrder.Fee'=>$buy_fee, 'BuyOrder.Total'=>$buy_total,'SellOrder.Rate' => $sell_rate, 'SellOrder.Fee' => $sell_fee,
+        'SellOrder.Total'=> $sell_total,  'updated_at' => new \MongoDB\BSON\UTCDateTime()
+    )));
+
+    return $result->getModifiedCount();
+}

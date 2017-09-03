@@ -1,8 +1,8 @@
 <?php
 include('app.php');
-require_once 'library/devbittrexapi.php';
+/*require_once 'library/devbittrexapi.php';
 use atm\devbittrex\DevClient;
-$devbittrex = new DevClient();
+$devbittrex = new DevClient();*/
 echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
 /** Seller
  *  1. Get non-complete buying orders from DB
@@ -51,7 +51,7 @@ foreach ($bought_orders as $bought_order)
     }
 
     //API
-    $sell_result = $devbittrex->sellLimit($bought_order->MarketName, $Qty, $bought_order->SellOrder->Rate);
+    $sell_result = $bittrex->sellLimit($bought_order->MarketName, $Qty, $bought_order->SellOrder->Rate);
     if (!empty($sell_result->uuid)) {
         // Insert order into db
         sellLimitDB($bought_order->_id, $sell_result->uuid, $api_status, $dbclient);
