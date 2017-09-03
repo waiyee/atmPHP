@@ -28,6 +28,7 @@ foreach ($selling_orders as $selling_order){
     }
 }
 
+updateWallet($bittrex,$dbclient);
 
 
 
