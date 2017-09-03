@@ -112,7 +112,7 @@ foreach ($valid_mkt as $market) {
     if ( $btc_balance - (MINTRADESIZE*2) > 0 )
         $quantity = round( MINTRADESIZE / $rate,8 );
     else if ($btc_balance > 0 )
-        $quantity = round($btc_balance / $rate, 8);
+        $quantity = round($btc_balance * (1- TXFEE) / $rate , 8);
 
     if ($quantity * $rate >= MINTRADESIZE ) {
 
@@ -128,10 +128,13 @@ foreach ($valid_mkt as $market) {
                 ))
 
         );
-        if (!$exits_now) {
+
+        if (empty($exits_now)) {
             $btc_balance = round($btc_balance - ($rate * $quantity *(1+TXFEE) ), 8);
+
             $buy_result = $bittrex->buyLimit($market->doc->MarketName, $quantity, $rate);
-            if ($buy_result->uuid) {
+
+            if (!empty($buy_result->uuid)) {
                 $api_status = '';
                 // Insert order into db
 
@@ -139,7 +142,7 @@ foreach ($valid_mkt as $market) {
 
                 $insert_id = buyLimitDB($buy_result->uuid, $market->doc->MarketName, $quantity, $rate, $api_status, $dbclient);
             }
-            if ($insert_id)
+            if (!empty($insert_id))
                 echo '[' . date('Y-m-d H:i:s') . '] ' . $market->doc->MarketName . ' Buy at ' . number_format($rate, 8) . ' for ' . number_format($quantity, 9) . ' placed.<br/>Score: ' . $market->doc->Score . '<br/>';
         }
     }
