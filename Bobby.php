@@ -60,7 +60,7 @@ if($opening_orders) {
 }
 */
 
-//updateWallet($bittrex,$dbclient);
+updateWallet($bittrex,$dbclient);
 
 // Search Analyser for valid record to place buy order
 $analyser = $dbclient->coins->Analyser;
@@ -115,7 +115,7 @@ foreach ($valid_mkt as $market) {
         $quantity = round($btc_balance / $rate, 8);
 
     if ($quantity * $rate >= MINTRADESIZE ) {
-        $btc_balance = round($btc_balance - ($rate * $quantity *(1+TXFEE) ), 8);
+
         $exits_now = $dbclient->coins->OwnOrderBook->findOne(
             array('$and' =>
                 array(
@@ -129,6 +129,7 @@ foreach ($valid_mkt as $market) {
 
         );
         if (!$exits_now) {
+            $btc_balance = round($btc_balance - ($rate * $quantity *(1+TXFEE) ), 8);
             $buy_result = $bittrex->buyLimit($market->doc->MarketName, $quantity, $rate);
             if ($buy_result->uuid) {
                 $api_status = '';
