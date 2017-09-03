@@ -85,10 +85,18 @@ function BoughtOrders($uuid, $api_status, $db)
  * @param $db DB Client
  * @return mixed
  */
-function boughtOrder($id, $api_status, $db)
+function boughtOrder($id, $api_status, $db, $PricePerUnit, $Commission, $Total)
 {
     $OB = $db->coins->OwnOrderBook;
-    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'bought', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'BuyOrder.Status'=>$api_status)));
+    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array(
+        'Status'=>'bought',
+        'updated_at'=> new \MongoDB\BSON\UTCDateTime(),
+        'BuyOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(),
+        'BuyOrder.Status'=>$api_status,
+        'BuyOrder.Rate'=>$PricePerUnit,
+        'BuyOrder.Fee'=>$Commission,
+        'BuyOrder.Total'=>$Total
+    )));
 
     return $result->getModifiedCount();
 }
@@ -120,11 +128,19 @@ function SoldOrders($uuid, $api_status, $db)
  * @param $db DB Client
  * @return mixed
  */
-function SoldOrder($id, $api_status, $db)
+function SoldOrder($id, $api_status, $db, $PricePerUnit, $Commission, $Total)
 {
     $OB = $db->coins->OwnOrderBook;
 
-    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array('Status'=>'sold', 'updated_at'=> new \MongoDB\BSON\UTCDateTime(), 'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(), 'SellOrder.Status' => $api_status)));
+    $result = $OB->UpdateOne(array('_id'=>$id), array('$set'=>array(
+        'Status'=>'sold',
+        'updated_at'=> new \MongoDB\BSON\UTCDateTime(),
+        'SellOrder.CompleteTime'=>  new \MongoDB\BSON\UTCDateTime(),
+        'SellOrder.Status' => $api_status,
+        'SellOrder.Rate'=>$PricePerUnit,
+        'SellOrder.Fee'=>$Commission,
+        'SellOrder.Total'=>$Total
+    )));
     return $result->getModifiedCount();
 }
 

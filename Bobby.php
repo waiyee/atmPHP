@@ -29,6 +29,7 @@ foreach($selling_orders as $selling_order)
     var_dump($selling_order);
 }*/
 
+/*
 // API get all opening orders
 $opening_orders = $bittrex->getOpenOrders();
 
@@ -57,6 +58,7 @@ if($opening_orders) {
     if ($sold_orders)
         SoldOrders($sold_orders, $api_status, $dbclient);
 }
+*/
 
 //updateWallet($bittrex,$dbclient);
 
