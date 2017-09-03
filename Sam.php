@@ -1,8 +1,8 @@
 <?php
 include('app.php');
-/*require_once 'library/devbittrexapi.php';
+require_once 'library/devbittrexapi.php';
 use atm\devbittrex\DevClient;
-$devbittrex = new DevClient();*/
+$devbittrex = new DevClient();
 echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
 /** Seller
  *  1. Get non-complete buying orders from DB
@@ -16,9 +16,8 @@ echo 'Start: '.date('Y-m-d H:i:s').'<br/>';
 
 //$oid = $_POST['oid'];
 //$oid = '59a589df44cf4836100034ff';
-$temp =$dbclient->coins->tempOpeningOrders;
-$temp->drop();
-$opening_orders = $bittrex->getOpenOrders();
+
+// $opening_orders = $bittrex->getOpenOrders();
 $api_status = '';
 
 $return='';
@@ -28,9 +27,46 @@ $OOB = $dbclient->coins->OwnOrderBook;
 
 //$order = $OB->findOne(array('_id'=>  new \MongoDB\BSON\ObjectID($oid)));
 
+$bought_orders = $OOB->find(array('Status'=>'bought'));
 
+foreach ($bought_orders as $bought_order)
+{
+    $uuid = $bought_order->BuyOrder->uuid;
+    $type = 'buy';
+    $print_rate = number_format($bought_order->BuyOrder->Rate, 8);
+
+    //empty the wallet, config SELLALL
+    $Qty = $bought_order->SellOrder->Quantity;
+
+    if (SELLREMAIN == 1){
+        $balance = $bittrex->getBalance($bought_order->MarketCurrency);
+        $Qty = $balance->Available;
+
+        //UPDATE OwnOrderBook
+        $OOB->UpdateOne(array('_id'=>$bought_order->_id), array('$set'=>array(
+            'SellOrder.Quantity' => round($Qty, 8),
+            'SellOrder.Total' => round($bought_order->SellOrder->Rate * $Qty, 8),
+            'SellOrder.Fee' => round(( $bought_order->SellOrder->Rate * $Qty ) * TXFEE, 8)
+        )));
+    }
+
+    //API
+    $sell_result = $devbittrex->sellLimit($bought_order->MarketName, $Qty, $bought_order->SellOrder->Rate);
+    if (!empty($sell_result->uuid)) {
+        // Insert order into db
+        sellLimitDB($bought_order->_id, $sell_result->uuid, $api_status, $dbclient);
+
+        $return = '[' . date('Y-m-d H:i:s') . '] ' . $bought_order->MarketName . ' Place sell order at rate ' . number_format($bought_order->SellOrder->Rate, 8) . '<br/>';
+    }
+
+    echo $return;
+}
+
+/*
 if($opening_orders) {
+
     $opening_uuid = array();
+
     foreach ($opening_orders as $opening_order) {
         $dump = array_push($opening_uuid, $opening_order->OrderUuid);
     }
@@ -86,7 +122,7 @@ if($opening_orders) {
         }
     }
 }
-
+*/
 // Get selling orders that can't match rate for already TIMETOSELL hours
 $time_orders = $OOB->find(
     array('$and'=>
