@@ -180,6 +180,21 @@ function cancelSellDB ($uuid, $api_status, $db)
 }
 
 /*
+ * Cancel can't buy order
+ */
+function cancelBuyDB ($uuid, $api_status, $db)
+{
+    $OB = $db->coins->OwnOrderBook;
+
+    $result = $OB->UpdateOne(array('BuyOrder.uuid'=>$uuid), array('$set'=>array(
+        'Status'=>'cancel', 'updated_at' => new \MongoDB\BSON\UTCDateTime()
+    )));
+
+    return $result->getModifiedCount();
+    //return $this->call ('market/buylimit', $params, true);
+}
+
+/*
  * update sell order
  */
 function updateSellDB ($_id, $uuid, $api_status, $rate, $quantity, $db)

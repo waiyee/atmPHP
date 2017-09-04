@@ -4,7 +4,7 @@ include('app.php');
 
 $OOB = $dbclient->coins->OwnOrderBook;
 
-$time_orders = $OOB->find(
+$sell_time_orders = $OOB->find(
     array('$and'=>
         array(
             array('Status'=>'selling'),
@@ -13,8 +13,7 @@ $time_orders = $OOB->find(
 );
 
 
-foreach($time_orders as $time_order){
-
+foreach($sell_time_orders as $time_order){
 
     $cancel_result = $bittrex->cancel($time_order->SellOrder->uuid);
     if ($cancel_result != 'ERROR') {
@@ -28,3 +27,4 @@ foreach($time_orders as $time_order){
         }
     }
 }
+
