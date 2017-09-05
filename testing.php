@@ -53,40 +53,19 @@ echo 'Sold Count ' . $sold_cnt . '<br/><br/>';
 
 echo 'Total having :' . number_format($buying_btc + $selling_btc + $wallet->Available, 8) ;
 
-// Search Analyser for valid record to place buy order
-$analyser = $dbclient->coins->Analyser;
-$now = date('Y-m-d H:i:s');
-
-$ops =
-    array(
+$OOB = $dbclient->coins->OwnOrderBook;
+$buy_time_orders = $OOB->find(
+    array('$and'=>
         array(
-            '$sort' => array('Time' => 1, 'Score'=>1)
-        ),
-        array(
-            '$match' => array('Used' => 0, 'Expire' => array('$gte' => $now ), 'Score' => array('$gt' => 0))
-        ),
-        array(
-            '$group' => array(
-                '_id' => '$MarketName', 'doc' => array( '$last' => '$$ROOT')
-            )
-        ),
-        array(
-            '$project' => array(
-                '_id' => -1,
-                'doc' =>  '$doc'
-            )
-        ),
-        array(
-            '$sort' => array('doc.Score'=>-1)
-        )
-    );
+            array('Status'=>'buying'),
+            array("BuyOrder.OrderTime" => array('$lt'=>new MongoDB\BSON\UTCDateTime(microtime(true) * 1000 - (CANCELBUY*60*1000))))
+        ))
+);
 
 
+foreach($buy_time_orders as $time_order){
 
-$valid_mkt = $analyser->aggregate($ops); // Valid time + non-used + no buying/selling market in OrderBook
-
-
-foreach ($valid_mkt as $market) {
-    var_dump($market->doc);
+   var_dump($time_order);
 }
+
 
