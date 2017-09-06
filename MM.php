@@ -10,11 +10,30 @@ $btc = 0.0005;
 $TX = 0.0025;
 
 $collection = $dbclient->coins->markets;
-$cursor = $collection->find([]); //TODO Need filter BTC-
+$cursor = $collection->find(array('BaseCurrency'=>'BTC'));
 foreach ($cursor as $doc) {
 
     echo 'Start--'.date('Y-m-d H:i:s').'<br/>';
     $Market = $doc->MarketName;
+
+    //Check order exists
+    $exits_now = $dbclient->coins->OwnOrderBook->findOne(
+        array('$and' =>
+            array(
+                array('MarketName' => $Market),
+                array('$or' =>
+                    array(
+                        array('Status' => 'buying'), array('Status' => 'selling'), array('Status' => 'bought')
+                    )
+                )
+            ))
+
+    );
+    if (!empty($exits_now)) {
+        echo $Market.' order exists.<br/>';
+        echo '<br>End--'.date('Y-m-d H:i:s').'<br/><br/>';
+        continue;
+    }
 
     $result = $bittrex->getTicker($Market);
 
@@ -23,7 +42,7 @@ foreach ($cursor as $doc) {
     $last = round($result->Last,8);
 
     if( $bid == 0 || $ask == 0){
-        echo $Market.' cancelled.';
+        echo $Market.' cancelled.<br/>';
         continue;
     }
 
@@ -32,12 +51,12 @@ foreach ($cursor as $doc) {
     $buy = round($bid+$increment,8); //buy rate
     $sell = round($ask-$increment,8); //sell rate
     $aspread = $sell-$buy;
-    $aspreadperc = $aspread/($ask-$increment);
+    $aspreadperc = $aspread/$sell;
 
-    $qty = round($btc / $buy,8); //buy qty
+    $quantity = round($btc / $buy,8); //buy qty
 
-    $estcost = number_format($qty*$buy*(1+$TX),8);
-    $estreturn = number_format($qty*$sell*(1-$TX),8);
+    $estcost = number_format($quantity*$buy*(1+$TX),8);
+    $estreturn = number_format($quantity*$sell*(1-$TX),8);
     $profit = number_format($estreturn-$estcost,8);
 
 
@@ -47,34 +66,28 @@ foreach ($cursor as $doc) {
         echo '<br>Spread%: '.number_format($spreadperc,8);
         echo '<br>ASpread: '.number_format($aspread,8);
         echo '<br>ASpread%: '.number_format($aspreadperc,8);
-        echo '<br>Buy@'.$buy;
+        echo '<br>Buy@'.number_format($buy,8);
         echo '<br>EstCost@'.$estcost;
-        echo '<br>Sell@'.$sell;
+        echo '<br>Sell@'.number_format($sell,8);
         echo '<br>EstReturn@'.$estreturn;
         echo '<br>EstProfit@'.$profit;
 
-        /****************************************************  NOT YET FINISH***************************************************************/
-        /**
         //Place buy order
-        $buy_result = $bittrex->buyLimit($Market, $qty, $buy);
-        if (!empty($buy_result->uuid)) {
-            //Check order status
-            $status = $bittrex->getOrder($buy_result->uuid);
-            if (!empty($status->Closed)){
-                //Bought -> Sell
-                $sell_result = $bittrex->sellLimit($Market, $qty, $sell);
-            }
 
+        $buy_result = $bittrex->buyLimit($Market, $quantity, $buy);
+        if (!empty($buy_result->uuid)) {
+            echo '<br>Buy order placed.';
+            //Insert DB
+            $insert_id = buysellLimitDB($buy_result->uuid, $Market, $quantity, $buy, $sell, $api_status, $dbclient);
         }
-        */
-        /****************************************************  NOT YET FINISH***************************************************************/
+
     }
     else{
         echo $Market.' skiped';
     }
 
     echo '<br>End--'.date('Y-m-d H:i:s').'<br/><br/>';
-    //echo '<br><br>';
+
 
 }
 

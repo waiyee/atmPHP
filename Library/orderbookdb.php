@@ -58,6 +58,55 @@ function buyLimitDB ($uuid, $market, $quantity, $buy_rate, $api_status, $db)
     return $result->getInsertedId();
 }
 
+function buysellLimitDB ($uuid, $market, $quantity, $buy_rate, $sell_rate, $api_status, $db)
+{
+    $exploeMrt = explode('-', $market);
+
+    $basecur = $exploeMrt[0];
+    $marketcur= $exploeMrt[1];
+
+    $buy_fee = ($quantity * $buy_rate) * TXFEE;
+    $buy_total = round( ($quantity * $buy_rate) * (1+TXFEE) , 8);
+
+    //$expected_sell_total = $buy_total * (1+PROFIT +TXFEE);
+    //$sell_rate = round( $expected_sell_total / $quantity, 8);
+    $sell_fee = ( $sell_rate * $quantity ) * TXFEE;
+    $sell_total = round(($sell_rate*$quantity) * (1-TXFEE),8);
+
+    $params = array (
+        'MarketName'   => $market,
+        'BaseCurrency' => $basecur,
+        'MarketCurrency' => $marketcur,
+        'Status'   => 'buying',
+        'BuyOrder' => array(
+            'uuid'       => $uuid,
+            'Quantity' => $quantity,
+            'Rate'     => $buy_rate,
+            'Fee'      => $buy_fee,
+            'Total'    => $buy_total,
+            'Status'   => $api_status,
+            'OrderTime' => new \MongoDB\BSON\UTCDateTime(),
+            'CompleteTime' => null
+        ),
+        'SellOrder' => array(
+            'uuid'       => null,
+            'Quantity' => $quantity,
+            'Rate'     => $sell_rate,
+            'Fee'      => $sell_fee,
+            'Total'    => $sell_total,
+            'Status'    => null,
+            'OrderTime' => null,
+            'CompleteTime' => null
+        ),
+        'created_at' => new \MongoDB\BSON\UTCDateTime(),
+        'updated_at'=> new \MongoDB\BSON\UTCDateTime()
+    );
+    $OB = $db->coins->OwnOrderBook;
+    $result = $OB->InsertOne($params);
+
+    return $result->getInsertedId();
+}
+
 /**
  *  Settle buy orders
  * @param $uuid  Bittrex sell order uuid
