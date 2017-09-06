@@ -28,6 +28,28 @@ foreach ($selling_orders as $selling_order){
     }
 }
 
+$buy_time_orders = $OOB->find(
+    array('$and'=>
+        array(
+            array('Status'=>'buying'),
+            array("BuyOrder.OrderTime" => array('$lt'=>new MongoDB\BSON\UTCDateTime(microtime(true) * 1000 - (CANCELBUY*60*1000))))
+        ))
+);
+
+
+foreach($buy_time_orders as $time_order){
+
+    $cancel_result = $bittrex->cancel($time_order->BuyOrder->uuid);
+
+    if ($cancel_result != 'ERROR') {
+        echo 'Cancel order ' . $time_order->MarketName;
+        cancelBuyDB($time_order->BuyOrder->uuid, $api_status, $dbclient);
+
+
+    }
+}
+
+
 updateWallet($bittrex,$dbclient);
 
 
