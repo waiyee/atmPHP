@@ -53,19 +53,6 @@ echo 'Sold Count ' . $sold_cnt . '<br/><br/>';
 
 echo 'Total having :' . number_format($buying_btc + $selling_btc + $wallet->Available, 8) ;
 
-$OOB = $dbclient->coins->OwnOrderBook;
-$buy_time_orders = $OOB->find(
-    array('$and'=>
-        array(
-            array('Status'=>'buying'),
-            array("BuyOrder.OrderTime" => array('$lt'=>new MongoDB\BSON\UTCDateTime(microtime(true) * 1000 - (CANCELBUY*60*1000))))
-        ))
-);
 
 
-foreach($buy_time_orders as $time_order){
-
-   var_dump($time_order);
-}
-
-
+var_dump($bittrex->getOpenOrders('BTC-QTUM'));

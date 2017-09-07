@@ -22,7 +22,7 @@ foreach($sell_time_orders as $time_order){
 
         $market_price = $bittrex->getTicker($time_order->MarketName);
         if ($market_price) {
-            $new_uuid = $bittrex->sellLimit($time_order->MarketName, $time_order->SellOrder->Quantity, $market_price->last);
+            $new_uuid = $bittrex->sellLimit($time_order->MarketName, $time_order->SellOrder->Quantity, $market_price->Last);
             updateSellDB($time_order->_id, $new_uuid->uuid, $api_status, $market_price->last, $time_oder->SellOrder->Quantity, $dbclient);
         }
     }
